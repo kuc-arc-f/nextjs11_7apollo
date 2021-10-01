@@ -12,7 +12,10 @@ export default class NoteCreate extends Component {
   constructor(props){
     super(props)
     const tags = LibNote.get_tags();  
-    this.state = {title: '', content: '', arr_tags: tags}
+    const category = LibNote.getCategory();  
+    this.state = {
+      title: '', content: '', arr_tags: tags, category: category
+    }
   }
   componentDidMount(){
     const key = process.env.COOKIE_KEY_USER_ID;
@@ -29,6 +32,7 @@ export default class NoteCreate extends Component {
       let noteId = 0;
       const title = document.getElementById('title');
       const content = document.getElementById('content');
+      const category = document.getElementById('category');
       const arrTags = [];
       this.state.arr_tags.map((item, index) => {
         let elemName = "check_" + index;
@@ -37,24 +41,27 @@ export default class NoteCreate extends Component {
           arrTags.push(item);
         }
       }) 
-      const result = await client.mutate({
+      let result = await client.mutate({
         mutation: Note.get_gql_add(title.value, content.value)
       })
       if(typeof result.data.noteAdd.id === "number"){
         noteId = result.data.noteAdd.id;
-console.log("noteId=", noteId);
+//console.log("noteId=", noteId);
       }else{
         alert("Error, note save");
         return;
       }
+      // Category
+//console.log( "c=", category.value);
+      result = await client.mutate({
+        mutation: Note.getCategoryAdd(noteId, category.value)
+      })
       //noteTag
       for (const item of arrTags) {
-        const result = await client.mutate({
+        result = await client.mutate({
           mutation: Note.getNoteTagAdd(noteId, item)
         })
-//console.log(item);
       }     
-//console.log(arrTags);
       alert("Success, save");
     } catch (error) {
       console.error(error);
@@ -78,12 +85,25 @@ console.log("noteId=", noteId);
     })    
   }     
   render() {
-console.log(this.state.arr_tags);
+//console.log(this.state.category);
+    const category = this.state.category;
     return (
       <Layout>
         <div className="container">
           <hr className="mt-2 mb-2" />
           <h1>Notes - Create</h1>
+          <div className="row">
+            <div className="col-md-6">
+              <label>Category :</label>
+              <select id="category" name="category" className="form-control">
+              {category.map((item, index) => {
+  //console.log(item.name)
+                return(<option key={index}
+                  value={item}>{item}</option>)            
+              })}                 
+              </select>
+            </div>
+          </div>
           <div className="row">
             <div className="col-md-6">
               <div className="form-group">
@@ -103,6 +123,7 @@ console.log(this.state.arr_tags);
             </div>
           </div>
           <hr />
+          Tag:<br />
           {this.tagsRow()}
           <hr />          
           <div className="form-group">

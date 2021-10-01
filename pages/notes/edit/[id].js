@@ -13,7 +13,7 @@ export default class NoteEdit extends React.Component {
       query: Note.get_query_item(id),
       fetchPolicy: "network-only"
     });
-//console.log(data.data.note);
+console.log(data.data.note);
     const item = data.data.note;
     return {
       id: id,
@@ -22,16 +22,23 @@ export default class NoteEdit extends React.Component {
   }
   constructor(props){
     super(props)
-    const tags = LibNote.get_tags();  
+    const tags = LibNote.get_tags();
+    const category = LibNote.getCategory();  
     this.state = {
       title: this.props.item.title, 
       content: this.props.item.content,
-      noteTag: this.props.item.noteTag, 
+      noteTag: this.props.item.noteTag,
+      category: category, 
       arr_tags: tags
     }
-console.log(this.props.item)
+//console.log(this.props.item)
   }
   componentDidMount(){
+//    console.log(this.props.item.category)
+    if(this.props.item.category !== null){
+      const elem = document.getElementById('category')
+      elem.value = this.props.item.category.name
+    }
   }     
   async handleClickDelete(){
     console.log("#deete-id:" , this.props.id)
@@ -53,6 +60,7 @@ console.log(result)
       console.log("#update_item-id:" , this.props.id)
       const title = document.getElementById('title');
       const content = document.getElementById('content');
+      const category = document.getElementById('category');
       const arrTags = [];
       this.state.arr_tags.map((item, index) => {
         let elemName = "check_" + index;
@@ -63,7 +71,7 @@ console.log(result)
       })       
 console.log(arrTags);
       const noteId = this.props.id;
-      const result = await client.mutate({
+      let result = await client.mutate({
         mutation: Note.getUpdate(this.props.id, title.value, content.value)
       })
 //console.log(result.data.noteUpdate);
@@ -72,9 +80,14 @@ console.log(arrTags);
       }else{
         alert("Error, note save");
         return;
-      }      
+      }   
+      // category
+      result = await client.mutate({
+        mutation: Note.getCategoryAdd(noteId, category.value)
+      })
+      // Tag   
       for (const item of arrTags) {
-        const result = await client.mutate({
+        result = await client.mutate({
           mutation: Note.getNoteTagAdd(noteId, item)
         })
       }
@@ -113,11 +126,25 @@ console.log(arrTags);
     })    
   }    
   render() {
+//console.log(this.state.category);
+    const category = this.state.category;    
     return (
       <Layout>
           <div className="container">
             <hr className="mt-2 mb-2" />
             <h1>Note - Edit</h1>
+            <div className="row">
+              <div className="col-md-6">
+                <label>Category :</label>
+                <select id="category" name="category" className="form-control">
+                {category.map((item, index) => {
+    //console.log(item.name)
+                  return(<option key={index}
+                    value={item}>{item}</option>)            
+                })}                 
+                </select>
+              </div>
+            </div>
             <div className="row">
               <div className="col-md-6">
                 <div className="form-group">

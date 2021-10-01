@@ -20,6 +20,15 @@ const note = {
       }  
     `   
   },
+  getCategoryAdd : function(noteId, name){
+    return gql`
+      mutation {
+        categoryAdd(noteId: ${noteId}, name: "${name}"){
+          id
+        }
+      }        
+    `   
+  },  
   get_query_item : function(id){
     return gql`
     query {
@@ -30,7 +39,11 @@ const note = {
         noteTag{
           id
           name
-        }    
+        }
+        category{
+          id
+          name
+        }            
       }
     }
    `   
